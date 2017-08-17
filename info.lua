@@ -60,7 +60,7 @@ function spinspeed_string()
   if player_state ~= var.PlayerStateFlags.DASHING and
       player_state ~= var.PlayerStateFlags.FALLING_OR_NEAR_HOLE and
       var.bonk_wall:read() == 1 and
-      var.hand_up_pose:read() == 0 then
+      var.hand_up_pose:read() == var.HandUpPoseFlags.NOT_UP then
       -- duck causes your hand to go up, but so do crystals/pendants/triforce
       -- however, crystals/pendants also clear spinspeed anyway.. (as do
       -- hearts), and who cares once you get triforce.  Works.
@@ -85,7 +85,7 @@ function bunny_string()
     return 'bunny'
   else
     if player_state == var.PlayerStateFlags.PERMABUNNY then
-      return 'linkbunny'
+      return 'lousylink'
     end
     -- if you set tempbunny w/ cheats, you end up in an infinite
     -- transformation.. so I don't think I need to check for this here.
@@ -94,7 +94,7 @@ function bunny_string()
   -- transformation
   return 'link'
 end
-function supertempbunny_string()
+function tempbunny_string()
   if var.bunny_mode:read() == 1 and
       var.tempbunny_timer:read() ~= 0 and
       var.player_state:read() ~= var.PlayerStateFlags.TEMPBUNNY then
@@ -112,6 +112,6 @@ return {
   spinspeed_string = spinspeed_string,
   waterwalk_string = waterwalk_string,
   bunny_string = bunny_string,
-  supertempbunny_string = supertempbunny_string,
+  tempbunny_string = tempbunny_string,
   main = main,
 }

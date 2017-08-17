@@ -11,7 +11,7 @@ while true do
       'Waterwalk: ' .. info.waterwalk_string(),
       'Spinspeed: ' .. info.spinspeed_string(),
       'Bunny mode: ' .. info.bunny_string(),
-      'Supertempbunny: ' .. info.supertempbunny_string(),
+      'Tempbunny: ' .. info.tempbunny_string(),
   })
   snes9x.frameadvance()
 end
