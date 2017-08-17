@@ -57,6 +57,7 @@ end
 
 function spinspeed_string()
   player_state = var.player_state:read()
+  -- spinspeed sets dash_countdown to 29 as well, but not checking it
   if player_state ~= var.PlayerStateFlags.DASHING and
       player_state ~= var.PlayerStateFlags.FALLING_OR_NEAR_HOLE and
       var.bonk_wall:read() == 1 and

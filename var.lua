@@ -27,7 +27,7 @@ return {
   bunny_mode = ram.Unsigned(0x7E02E0, 1),
 
   bonk_wall = ram.Unsigned(0x7E0372, 1),
-  dash_countdown = ram.Unsigned(0x7E0374, 1),  -- 29 during ss, but not checking
+  dash_countdown = ram.Unsigned(0x7E0374, 1),
   tempbunny_timer = ram.Unsigned(0x7E03F5, 2),
   room_upper_layer = ram.Unsigned(0x7E044A, 2),
   -- can be > 1 if it's queued and then you jump... code just adds 1 to it for
