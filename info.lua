@@ -71,17 +71,28 @@ function spinspeed_string()
   return 'disarmed'
 end
 
-function superbunny_string()
+function bunny_string()
   player_state = var.player_state:read()
-  if var.bunny_mode:read() == 1 and
-      (
+  if var.bunny_mode:read() == 1 then
+    if (
         player_state == var.PlayerStateFlags.GROUND  or
         player_state == var.PlayerStateFlags.DASHING or
-        player_state == var.PlayerStateFlags.SPIN_ATTACKING
-      ) then
-    return 'armed'
+        player_state == var.PlayerStateFlags.SPIN_ATTACKING) then
+      return 'superbunny'
+    elseif player_state == var.PlayerStateFlags.TEMPBUNNY then
+      return 'tempbunny'
+    end
+    return 'bunny'
+  else
+    if player_state == var.PlayerStateFlags.PERMABUNNY then
+      return 'linkbunny'
+    end
+    -- if you set tempbunny w/ cheats, you end up in an infinite
+    -- transformation.. so I don't think I need to check for this here.
   end
-  return 'disarmed'
+  -- when hit by a bunny beam you are considered link during the
+  -- transformation
+  return 'link'
 end
 function supertempbunny_string()
   if var.bunny_mode:read() == 1 and
@@ -100,7 +111,7 @@ return {
   stored_eg_string = stored_eg_string,
   spinspeed_string = spinspeed_string,
   waterwalk_string = waterwalk_string,
-  superbunny_string = superbunny_string,
+  bunny_string = bunny_string,
   supertempbunny_string = supertempbunny_string,
   main = main,
 }
