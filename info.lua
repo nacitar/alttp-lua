@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
-
-local var = require 'var'
+local THIS_DIR = (... or '1'):match("(.-)[^%.]+$")
+local var = require(THIS_DIR .. 'var')
 
 local StoredEG = {
   DISARMED = 0,
