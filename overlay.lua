@@ -10,6 +10,8 @@ while true do
       'Stored EG: ' .. info.stored_eg_string(),
       'Waterwalk: ' .. info.waterwalk_string(),
       'Spinspeed: ' .. info.spinspeed_string(),
+      'Superbunny: ' .. info.superbunny_string(),
+      'Supertempbunny: ' .. info.supertempbunny_string(),
   })
   snes9x.frameadvance()
 end

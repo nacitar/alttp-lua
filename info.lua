@@ -71,6 +71,27 @@ function spinspeed_string()
   return 'disarmed'
 end
 
+function superbunny_string()
+  player_state = var.player_state:read()
+  if var.bunny_mode:read() == 1 and
+      (
+        player_state == var.PlayerStateFlags.GROUND  or
+        player_state == var.PlayerStateFlags.DASHING or
+        player_state == var.PlayerStateFlags.SPIN_ATTACKING
+      ) then
+    return 'armed'
+  end
+  return 'disarmed'
+end
+function supertempbunny_string()
+  if var.bunny_mode:read() == 1 and
+      var.tempbunny_timer:read() ~= 0 and
+      var.player_state:read() ~= var.PlayerStateFlags.TEMPBUNNY then
+    return 'armed'
+  end
+  return 'disarmed'
+end
+
 function main()
   update_stored_eg()
 end
@@ -79,5 +100,7 @@ return {
   stored_eg_string = stored_eg_string,
   spinspeed_string = spinspeed_string,
   waterwalk_string = waterwalk_string,
+  superbunny_string = superbunny_string,
+  supertempbunny_string = supertempbunny_string,
   main = main,
 }

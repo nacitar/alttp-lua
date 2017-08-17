@@ -10,9 +10,13 @@ return {
 
   player_state = ram.Unsigned(0x7E005D, 1),
   PlayerStateFlags = {
+    GROUND = 0,
     FALLING_OR_NEAR_HOLE = 1,
+    SPIN_ATTACKING = 3,
     JUMPING = 6,
     DASHING = 17,
+    PERMABUNNY = 23,
+    TEMPBUNNY = 28,
   },
 
   hand_up_pose = ram.Unsigned(0x7E02DA, 1),
@@ -20,8 +24,11 @@ return {
     NOT_UP = 0,
   },
 
+  bunny_mode = ram.Unsigned(0x7E02E0, 1),
+
   bonk_wall = ram.Unsigned(0x7E0372, 1),
   dash_countdown = ram.Unsigned(0x7E0374, 1),  -- 29 during ss, but not checking
+  tempbunny_timer = ram.Unsigned(0x7E03F5, 2),
   room_upper_layer = ram.Unsigned(0x7E044A, 2),
   -- can be > 1 if it's queued and then you jump... code just adds 1 to it for
   -- some reason, rather than setting to 1 like a bool
