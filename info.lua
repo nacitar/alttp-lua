@@ -1,50 +1,29 @@
 #!/usr/bin/env lua
+
+-- add pull mode (detect if you aren't actually at a statue, too)
 local THIS_DIR = (... or '1'):match("(.-)[^%.]+$")
 local var = require(THIS_DIR .. 'var')
 
-local StoredEG = {
-  DISARMED = 0,
-  STRONG = 1,
-  WEAK = 2,
-}
-
-local stored_eg = nil
-local last_player_state = nil
-function update_stored_eg()
-  player_state = var.player_state:read()
-  if last_player_state ~= nil then
-    queued_layer_change = var.queued_layer_change:read()
-    -- if we jump when we already have stored EG, the count will be > 1, keep
-    -- the indicator in that case... but if it is only 1, we need to make sure
-    -- it's not just a normal jump.  Also, the last frame of a jump to the
-    -- ground swaps the state one frame prior to clearing the
-    -- queued_layer_change, so we have to backlog one frame. =/
-    if queued_layer_change > 1 or (queued_layer_change == 1 and
-        last_player_state ~= nil and
-        last_player_state ~= var.PlayerStateFlags.JUMPING and
-        player_state ~= var.PlayerStateFlags.JUMPING) then
-      room_upper_layer = var.room_upper_layer:read()
-      if room_upper_layer == 1 then
-        stored_eg = StoredEG.STRONG
-      else
-        stored_eg = StoredEG.WEAK
-      end
+function stored_eg_string()
+  -- if you queue a layer change, the value is incremented rather than simply
+  -- set to 1.  Therefore, if you queue it multiple times, the value will
+  -- increase... and any nonzero value is treated at a single change.
+  --
+  -- When jumping a ledge, the player state is set to jumping, and a layer
+  -- change is queued... however, there is one frame upon landing where the
+  -- layer change is still queued but the player state is no longer jumping.
+  -- Fortunately, the aux link state does still indicate that link was jumping
+  -- during this frame, so we can instead use that value and avoid false
+  -- positives.
+  if var.queued_layer_change:read() >= 1 and
+      var.aux_link_state:read() ~= var.AuxLinkStateFlags.JUMPING then
+    if var.room_upper_layer:read() == 1 then
+      return 'string'
     else
-      stored_eg = StoredEG.DISARMED
+      return 'weak'
     end
   end
-  last_player_state = player_state
-end
-
-function stored_eg_string()
-  if stored_eg == StoredEG.STRONG then
-    return 'strong'
-  elseif stored_eg == StoredEG.WEAK then
-    return 'weak'
-  elseif stored_eg == StoredEG.DISARMED then
-    return 'disarmed'
-  end
-  return ''
+  return 'disarmed'
 end
 
 function waterwalk_string()
@@ -95,6 +74,7 @@ function bunny_string()
   -- transformation
   return 'link'
 end
+
 function tempbunny_string()
   if var.bunny_mode:read() == 1 and
       var.tempbunny_timer:read() ~= 0 and
@@ -104,15 +84,10 @@ function tempbunny_string()
   return 'disarmed'
 end
 
-function main()
-  update_stored_eg()
-end
-
 return {
   stored_eg_string = stored_eg_string,
   spinspeed_string = spinspeed_string,
   waterwalk_string = waterwalk_string,
   bunny_string = bunny_string,
   tempbunny_string = tempbunny_string,
-  main = main,
 }

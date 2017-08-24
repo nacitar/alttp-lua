@@ -5,7 +5,6 @@ local info = require(THIS_DIR .. 'info')
 local util = require(THIS_DIR .. 'util.util')
 
 while true do
-  info.main()
   util.draw_text(2, 120, {
       'Stored EG: ' .. info.stored_eg_string(),
       'Waterwalk: ' .. info.waterwalk_string(),

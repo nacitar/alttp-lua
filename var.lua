@@ -8,6 +8,13 @@ return {
     NORMAL = 0,
   },
 
+  aux_link_state = ram.Unsigned(0x7E004D, 1),
+  AuxLinkStateFlags = {
+    GROUND = 0,
+    RECOIL = 1,
+    JUMPING = 2,
+    SWIMMING = 4,
+  },
   player_state = ram.Unsigned(0x7E005D, 1),
   PlayerStateFlags = {
     GROUND = 0,
