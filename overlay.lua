@@ -4,6 +4,9 @@ local THIS_DIR = (... or '1'):match("(.-)[^%.]+$")
 local info = require(THIS_DIR .. 'info')
 local util = require(THIS_DIR .. 'util.util')
 
+-- can't know previous frame's buttons afaik, unless I can work backwards from
+-- the filtered input register...
+last_buttons = {}
 while true do
   util.draw_text(2, 120, {
       'Stored EG: ' .. info.stored_eg_string(),
@@ -11,6 +14,8 @@ while true do
       'Spinspeed: ' .. info.spinspeed_string(),
       'Bunny mode: ' .. info.bunny_string(),
       'Tempbunny: ' .. info.tempbunny_string(),
+      'Buttons: ' .. info.snes9x_button_string(last_buttons),
   })
+  last_buttons = info.buffered_buttons()
   snes9x.frameadvance()
 end

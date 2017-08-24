@@ -94,10 +94,48 @@ function tempbunny_string()
   return 'disarmed'
 end
 
+function buffered_buttons()
+  pressed = {}
+  main = var.joypad1_main:read()
+  secondary = var.joypad1_secondary:read()
+  for key, value in pairs(var.JoypadMain) do
+    if bit.band(main, value) ~= 0 then
+      pressed[key] = true
+    end
+  end
+  for key, value in pairs(var.JoypadSecondary) do
+    if bit.band(secondary, value) ~= 0 then
+      pressed[key] = true
+    end
+  end
+  return pressed
+end
+
+function snes9x_button_string(pressed)
+  --snes9x='<^>v ABYX Ss'
+  -- TODO: LR? bizhawk? practice hack?
+  output = {}
+  table.insert(output, pressed['LEFT'] and '<' or ' ')
+  table.insert(output, pressed['UP'] and '^' or ' ')
+  table.insert(output, pressed['RIGHT'] and '>' or ' ')
+  table.insert(output, pressed['DOWN'] and 'v' or ' ')
+  table.insert(output, ' ')
+  table.insert(output, pressed['A'] and 'A' or ' ')
+  table.insert(output, pressed['B'] and 'B' or ' ')
+  table.insert(output, pressed['Y'] and 'Y' or ' ')
+  table.insert(output, pressed['X'] and 'X' or ' ')
+  table.insert(output, ' ')
+  table.insert(output, pressed['START'] and 'S' or ' ')
+  table.insert(output, pressed['SELECT'] and 's' or ' ')
+  return table.concat(output, '')
+end
+
 return {
   stored_eg_string = stored_eg_string,
   spinspeed_string = spinspeed_string,
   waterwalk_string = waterwalk_string,
   bunny_string = bunny_string,
   tempbunny_string = tempbunny_string,
+  snes9x_button_string = snes9x_button_string,
+  buffered_buttons = buffered_buttons,
 }

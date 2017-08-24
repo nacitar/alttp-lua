@@ -30,6 +30,27 @@ return {
     TEMPBUNNY = 28,
   },
 
+  joypad1_main = ram.Unsigned(0x7E00F0, 1),  -- [BYST | udlr]
+  joypad1_secondary = ram.Unsigned(0x7E00F2, 1),  -- [AXLR | ????]
+  joypad1_main_filtered = ram.Unsigned(0x7E00F4, 1),
+  joypad1_secondary_filtered = ram.Unsigned(0x7E00F6, 1),
+  JoypadMain = {
+    RIGHT = 1,
+    LEFT = 2,
+    DOWN = 4,
+    UP = 8,
+    START = 16,
+    SELECT = 32,
+    Y = 64,
+    B = 128,
+  },
+  JoypadSecondary = {
+    R = 16,
+    L = 32,
+    X = 64,
+    A = 128,
+  },
+
   hand_up_pose = ram.Unsigned(0x7E02DA, 1),
   HandUpPoseFlags = {
     NOT_UP = 0,
