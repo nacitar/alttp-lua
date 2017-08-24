@@ -3,6 +3,7 @@
 -- add pull mode (detect if you aren't actually at a statue, too)
 local THIS_DIR = (... or '1'):match("(.-)[^%.]+$")
 local var = require(THIS_DIR .. 'var')
+local util = require(THIS_DIR .. 'util.util')
 
 function stored_eg_string()
   -- if you queue a layer change, the value is incremented rather than simply
@@ -41,11 +42,12 @@ function waterwalk_string()
   return 'disarmed'
 end
 
+local SPINSPEED_BAD_STATES = util.Set({
+  var.PlayerStateFlags.DASHING,
+  var.PlayerStateFlags.FALLING_OR_NEAR_HOLE})
 function spinspeed_string()
-  player_state = var.player_state:read()
   -- spinspeed sets dash_countdown to 29 as well, but not checking it
-  if player_state ~= var.PlayerStateFlags.DASHING and
-      player_state ~= var.PlayerStateFlags.FALLING_OR_NEAR_HOLE and
+  if not SPINSPEED_BAD_STATES[var.player_state:read()] and
       var.bonk_wall:read() == 1 and
       var.hand_up_pose:read() == var.HandUpPoseFlags.NOT_UP then
       -- duck causes your hand to go up, but so do crystals/pendants/triforce
@@ -58,13 +60,14 @@ function spinspeed_string()
   return 'disarmed'
 end
 
+local SUPERBUNNY_STATES = util.Set({
+  var.PlayerStateFlags.GROUND,
+  var.PlayerStateFlags.DASHING,
+  var.PlayerStateFlags.SPIN_ATTACKING})
 function bunny_string()
   player_state = var.player_state:read()
   if var.bunny_mode:read() == 1 then
-    if (
-        player_state == var.PlayerStateFlags.GROUND  or
-        player_state == var.PlayerStateFlags.DASHING or
-        player_state == var.PlayerStateFlags.SPIN_ATTACKING) then
+    if SUPERBUNNY_STATES[player_state] then
       return 'superbunny'
     elseif player_state == var.PlayerStateFlags.TEMPBUNNY then
       return 'tempbunny'
