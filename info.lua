@@ -15,8 +15,14 @@ function stored_eg_string()
   -- Fortunately, the aux link state does still indicate that link was jumping
   -- during this frame, so we can instead use that value and avoid false
   -- positives.
-  if var.queued_layer_change:read() >= 1 and
-      var.aux_link_state:read() ~= var.AuxLinkStateFlags.JUMPING then
+  --
+  -- Overworld jumps have no effect on the state, except if jumping northern
+  -- ledges (as this is the same state as an interior ledge jump).  We can
+  -- detect the loss of EG in this case upon landing, which is suitable
+  -- enough.
+  if var.queued_layer_change:read() >= 1 and (
+          var.aux_link_state:read() ~= var.AuxLinkStateFlags.JUMPING or
+          var.is_indoors:read() == 0) then
     if var.room_upper_layer:read() == 1 then
       return 'strong'
     else

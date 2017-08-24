@@ -3,6 +3,7 @@ local THIS_DIR = (... or '1'):match("(.-)[^%.]+$")
 local ram = require(THIS_DIR .. 'util.ram')
 
 return {
+  is_indoors = ram.Unsigned(0x7E001B, 1),
   falling_state = ram.Unsigned(0x7E005B, 1),
   FallingStateFlags = {
     NORMAL = 0,
