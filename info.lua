@@ -18,7 +18,7 @@ function stored_eg_string()
   if var.queued_layer_change:read() >= 1 and
       var.aux_link_state:read() ~= var.AuxLinkStateFlags.JUMPING then
     if var.room_upper_layer:read() == 1 then
-      return 'string'
+      return 'strong'
     else
       return 'weak'
     end
