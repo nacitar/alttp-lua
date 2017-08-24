@@ -19,7 +19,8 @@ function stored_eg_string()
   -- Overworld jumps have no effect on the state, except if jumping northern
   -- ledges (as this is the same state as an interior ledge jump).  We can
   -- detect the loss of EG in this case upon landing, which is suitable
-  -- enough.
+  -- enough.  This approach also prevents erroneously thinking the queued
+  -- layer change was lost if mirror jumping a northern ledge.
   if var.queued_layer_change:read() >= 1 and (
           var.aux_link_state:read() ~= var.AuxLinkStateFlags.JUMPING or
           var.is_indoors:read() == 0) then
