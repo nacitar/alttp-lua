@@ -2,6 +2,7 @@ local THIS_DIR = (... or ''):match("(.-)[^%.]+$") or '.'
 
 local var = require(THIS_DIR .. 'var')
 local util = require(THIS_DIR .. 'util.util')
+local class = require(THIS_DIR .. 'util.class')
 
 function at_duck_map()
   if var.mode:read() == var.ModeFlags.TEXT_ITEM_MAP and
@@ -141,6 +142,131 @@ function buffered_buttons()
   return pressed
 end
 
+ScaledDrawer = class()
+function ScaledDrawer:__init(x, y, scale)
+  self.x = x
+  self.y = y
+  self.scale = scale
+end
+
+function ScaledDrawer:draw_rect(x, y, width, height, color)
+  width = width * self.scale
+  height = height * self.scale
+  if width == 0 or height == 0 then
+    return
+  end
+  x = self.x + x * self.scale
+  y = self.y + y * self.scale
+  if width == 1 and height == 1 then
+    pixelFunc = gui.drawPixel or gui.pixel
+    pixelFunc(x, y, color)
+  else
+    x2 = x + width - 1
+    y2 = y + height - 1
+    if width == 1 or height == 1 then
+      lineFunc = gui.drawLine or gui.line
+      lineFunc(x, y, x2, y2, color)
+    else
+      rectFunc = gui.drawBox or gui.rect
+      rectFunc(x, y, x2, y2, color, color)
+    end
+  end
+end
+function ScaledDrawer:draw_cross(x, y, border_color,
+    left_color, top_color, right_color, bottom_color)
+  drawer:draw_rect(0+x, 2+y, 8, 4, border_color)
+  drawer:draw_rect(2+x, 0+y, 4, 8, border_color)
+  drawer:draw_rect(1+x, 3+y, 2, 2, left_color)
+  drawer:draw_rect(3+x, 1+y, 2, 2, top_color)
+  drawer:draw_rect(5+x, 3+y, 2, 2, right_color)
+  drawer:draw_rect(3+x, 5+y, 2, 2, bottom_color)
+end
+function ScaledDrawer:draw_buttons(x, y, border_color,
+    left_color, top_color, right_color, bottom_color)
+
+  drawer:draw_rect(0+x, 4+y, 4, 2, border_color)
+  drawer:draw_rect(1+x, 3+y, 2, 4, border_color)
+  drawer:draw_rect(1+x, 4+y, 2, 2, left_color)
+
+  drawer:draw_rect(4+x, 0+y, 2, 4, border_color)
+  drawer:draw_rect(3+x, 1+y, 4, 2, border_color)
+  drawer:draw_rect(4+x, 1+y, 2, 2, top_color)
+
+  drawer:draw_rect(6+x, 4+y, 4, 2, border_color)
+  drawer:draw_rect(7+x, 3+y, 2, 4, border_color)
+  drawer:draw_rect(7+x, 4+y, 2, 2, right_color)
+
+  drawer:draw_rect(4+x, 6+y, 2, 4, border_color)
+  drawer:draw_rect(3+x, 7+y, 4, 2, border_color)
+  drawer:draw_rect(4+x, 7+y, 2, 2, bottom_color)
+end
+function ScaledDrawer:draw_slanted_button(x, y, border_color, color)
+  drawer:draw_rect(0+x, 2+y, 2, 2, border_color)
+  drawer:draw_rect(1+x, 1+y, 2, 2, border_color)
+  drawer:draw_rect(2+x, 0+y, 2, 2, border_color)
+  drawer:draw_rect(1+x, 2+y, 1, 1, color)
+  drawer:draw_rect(2+x, 1+y, 1, 1, color)
+end
+function ScaledDrawer:draw_shoulder_button(x, y, border_color, color)
+  drawer:draw_rect(1+x, 0+y, 3, 3, border_color)
+  drawer:draw_rect(0+x, 1+y, 5, 1, border_color)
+  drawer:draw_rect(1+x, 1+y, 3, 1, color)
+end
+
+function RGBA(red, green, blue, alpha)
+  if gui.drawBox then
+    -- bizhawk wants the alpha at the other end..
+    return (
+        bit.band(blue, 0xFF) +
+        bit.lshift(bit.band(green, 0xFF), 8) +
+        bit.lshift(bit.band(red, 0xFF), 16) +
+        bit.lshift(bit.band(alpha, 0xFF), 24))
+  else
+    -- snes9x
+    return (
+        bit.band(alpha, 0xFF) +
+        bit.lshift(bit.band(blue, 0xFF), 8) +
+        bit.lshift(bit.band(green, 0xFF), 16) +
+        bit.lshift(bit.band(red, 0xFF), 24))
+  end
+end
+function draw_input_hud(x, y, pressed)
+  local COLOR_PRESSED = RGBA(0xE1, 0xE1, 0xE1, 0xFF)
+  local COLOR_RELEASED = RGBA(0x48, 0x48, 0x48, 0xFF)
+  local COLOR_Y = RGBA(0x42, 0xDF, 0x58, 0xFF)
+  local COLOR_X = RGBA(0x69, 0x6C, 0xE8, 0xFF)
+  local COLOR_A = RGBA(0xEC, 0x6F, 0x71, 0xFF)
+  local COLOR_B = RGBA(0xF4, 0xE5, 0x77, 0xFF)
+
+  drawer = ScaledDrawer(x, y, 1)
+
+  left_color = pressed['LEFT'] and COLOR_PRESSED or COLOR_RELEASED
+  top_color = pressed['UP'] and COLOR_PRESSED or COLOR_RELEASED
+  right_color = pressed['RIGHT'] and COLOR_PRESSED or COLOR_RELEASED
+  bottom_color = pressed['DOWN'] and COLOR_PRESSED or COLOR_RELEASED
+  drawer:draw_cross(0, 1, 'black',
+      left_color, top_color, right_color, bottom_color)
+
+  color = pressed['L'] and COLOR_PRESSED or COLOR_RELEASED
+  drawer:draw_shoulder_button(8, 0, 'black', color)
+
+  color = pressed['SELECT'] and COLOR_PRESSED or COLOR_RELEASED
+  drawer:draw_slanted_button(9, 5, 'black', color)
+
+  color = pressed['START'] and COLOR_PRESSED or COLOR_RELEASED
+  drawer:draw_slanted_button(14, 5, 'black', color)
+
+  color = pressed['R'] and COLOR_PRESSED or COLOR_RELEASED
+  drawer:draw_shoulder_button(14, 0, 'black', color)
+
+  left_color = pressed['Y'] and COLOR_Y or COLOR_RELEASED
+  top_color = pressed['X'] and COLOR_X or COLOR_RELEASED
+  right_color = pressed['A'] and COLOR_A or COLOR_RELEASED
+  bottom_color = pressed['B'] and COLOR_B or COLOR_RELEASED
+  drawer:draw_buttons(19, 0, 'black',
+      left_color, top_color, right_color, bottom_color)
+end
+
 function snes9x_button_string(pressed)
   --snes9x='<^>v ABYX Ss'
   -- TODO: bizhawk? practice hack?
@@ -160,6 +286,7 @@ function snes9x_button_string(pressed)
   table.insert(output, ' ')
   table.insert(output, pressed['START'] and 'S' or ' ')
   table.insert(output, pressed['SELECT'] and 's' or ' ')
+
   return table.concat(output, '')
 end
 
@@ -173,4 +300,5 @@ return {
   tempbunny_string = tempbunny_string,
   snes9x_button_string = snes9x_button_string,
   buffered_buttons = buffered_buttons,
+  draw_input_hud = draw_input_hud,
 }

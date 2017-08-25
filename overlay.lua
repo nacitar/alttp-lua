@@ -7,6 +7,7 @@ local var = require(THIS_DIR .. 'var')
 local engine = emu or snes9x
 
 last_buttons = {}
+--print(gui)
 while true do
   util.draw_text(2, 120, {
       -- 'Mode:' .. var.mode:read() .. '/' .. var.submode:read(),
@@ -17,6 +18,8 @@ while true do
       'Tempbunny: ' .. info.tempbunny_string(),
       'Buttons: ' .. info.snes9x_button_string(last_buttons),
   })
+  -- 214 is the lowest it can draw
+  info.draw_input_hud(114, 213, last_buttons)
   last_buttons = info.buffered_buttons()
   engine.frameadvance()
 end
