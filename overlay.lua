@@ -1,9 +1,10 @@
-#!/usr/bin/env lua
-local THIS_DIR = (... or '1'):match("(.-)[^%.]+$")
+local THIS_DIR = (... or ''):match("(.-)[^%.]+$") or '.'
 
 local info = require(THIS_DIR .. 'info')
 local util = require(THIS_DIR .. 'util.util')
 local var = require(THIS_DIR .. 'var')
+
+local engine = emu or snes9x
 
 last_buttons = {}
 while true do
@@ -17,5 +18,5 @@ while true do
       'Buttons: ' .. info.snes9x_button_string(last_buttons),
   })
   last_buttons = info.buffered_buttons()
-  snes9x.frameadvance()
+  engine.frameadvance()
 end

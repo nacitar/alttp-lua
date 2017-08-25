@@ -1,7 +1,5 @@
-#!/usr/bin/env lua
+local THIS_DIR = (... or ''):match("(.-)[^%.]+$") or '.'
 
--- add pull mode (detect if you aren't actually at a statue, too)
-local THIS_DIR = (... or '1'):match("(.-)[^%.]+$")
 local var = require(THIS_DIR .. 'var')
 local util = require(THIS_DIR .. 'util.util')
 

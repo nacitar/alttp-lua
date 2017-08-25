@@ -1,7 +1,6 @@
-#!/usr/bin/env lua
-local THIS_DIR = (... or '1'):match("(.-)[^%.]+$")
-local ram = require(THIS_DIR .. 'util.ram')
+local THIS_DIR = (... or ''):match("(.-)[^%.]+$") or '.'
 
+local ram = require(THIS_DIR .. 'util.ram')
 
 -- look into pull glitch and taglongs
 
