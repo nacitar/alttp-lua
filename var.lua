@@ -6,6 +6,14 @@ local ram = require(THIS_DIR .. 'util.ram')
 -- look into pull glitch and taglongs
 
 return {
+  mode = ram.Unsigned(0x7E0010, 1),
+  ModeFlags = {
+    TEXT_ITEM_MAP = 14,
+  },
+  submode = ram.Unsigned(0x7E0011, 1),
+  SubModeFlags = {
+    DUCK_MAP = 10,
+  },
   is_indoors = ram.Unsigned(0x7E001B, 1),
   falling_state = ram.Unsigned(0x7E005B, 1),
   FallingStateFlags = {
@@ -68,7 +76,7 @@ return {
 
   link_cannot_move = ram.Unsigned(0x7E0B7B, 1),
   -----------------------------------
-  g_overlord_activator = ram.Array(0x7E0CF4, 1),  -- bomb/snake trap if not 0
+  g_overlord_activator = ram.Unsigned(0x7E0CF4, 1),  -- bomb/snake trap if not 0
   -----------------------------------
   overlord_type = ram.Array(0x7E0B00, 1, 8),
   overlord_x_low = ram.Array(0x7E0B08, 1, 8),
@@ -155,10 +163,13 @@ return {
   ancilla_y_subpixel = ram.Array(0x7E0C36, 1, 10),
   ancilla_x_subpixel = ram.Array(0x7E0C40, 1, 10),
   ancilla_type = ram.Array(0x7E0C4A, 1, 10),
-  AncillaTypeFlags = {
+  AncillaType = {
     DUCK = 39,
   },
-  ancilla_unknown_effect_steps = ram.Array(0x7E0C54, 1, 10),
+  ancilla_effect_state = ram.Array(0x7E0C54, 1, 10),
+  AncillaEffectState = {
+    HOLDING_PLAYER = 2,
+  },
   ancilla_item_index = ram.Array(0x7E0C5E, 1, 10),  -- 0x38 == pendant of power
   ancilla_dec_timer = ram.Array(0x7E0C68, 1, 10),
   ancilla_special_effect = ram.Array(0x7E0C72, 1, 10),  -- bomb direction laid

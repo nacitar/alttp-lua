@@ -5,6 +5,37 @@ local THIS_DIR = (... or '1'):match("(.-)[^%.]+$")
 local var = require(THIS_DIR .. 'var')
 local util = require(THIS_DIR .. 'util.util')
 
+function at_duck_map()
+  if var.mode:read() == var.ModeFlags.TEXT_ITEM_MAP and
+    var.submode:read() == var.SubModeFlags.DUCK_MAP then
+    return true
+  end
+  return false
+end
+
+function held_by_duck()
+  for i=0,9 do
+    if var.ancilla_type:read(i, false) == var.AncillaType.DUCK then
+      if var.ancilla_effect_state:read(i, false) ==
+          var.AncillaEffectState.HOLDING_PLAYER then
+        return true
+      end
+      break
+    end
+  end
+  return false
+end
+
+function using_duck()
+  -- if we're in the duck map, the duck has us
+  if at_duck_map() then
+    return true
+  end
+  -- otherwise, check if the duck currently has us... either on the way up or
+  -- on the way down, the state is the same
+  return held_by_duck()
+end
+
 function stored_eg_string()
   -- if you queue a layer change, the value is incremented rather than simply
   -- set to 1.  Therefore, if you queue it multiple times, the value will
@@ -48,11 +79,12 @@ local SPINSPEED_BAD_STATES = util.Set({
 function spinspeed_string()
   -- spinspeed sets dash_countdown to 29 as well, but not checking it
   if not SPINSPEED_BAD_STATES[var.player_state:read()] and
-      var.bonk_wall:read() == 1 and
-      var.hand_up_pose:read() == var.HandUpPoseFlags.NOT_UP then
-      -- duck causes your hand to go up, but so do crystals/pendants/triforce
-      -- however, crystals/pendants also clear spinspeed anyway.. (as do
-      -- hearts), and who cares once you get triforce.  Works.
+      var.bonk_wall:read() == 1 and not using_duck() then
+      -- Instead of using_duck(), one could check:
+      --    var.hand_up_pose:read() == var.HandUpPoseFlags.NOT_UP
+      -- duck causes your hand to go up, and its value as used elsewhere still
+      -- works for this logic... but checking for it directly makes more sense
+      -- than checking for a side effect.
       -- Without this extra check, dashing and then getting picked up by the
       -- duck mid-dash will erroneously report spinspeed.
     return 'armed'
@@ -113,7 +145,7 @@ end
 
 function snes9x_button_string(pressed)
   --snes9x='<^>v ABYX Ss'
-  -- TODO: LR? bizhawk? practice hack?
+  -- TODO: bizhawk? practice hack?
   output = {}
   table.insert(output, pressed['LEFT'] and '<' or ' ')
   table.insert(output, pressed['UP'] and '^' or ' ')
@@ -125,12 +157,17 @@ function snes9x_button_string(pressed)
   table.insert(output, pressed['Y'] and 'Y' or ' ')
   table.insert(output, pressed['X'] and 'X' or ' ')
   table.insert(output, ' ')
+  table.insert(output, pressed['L'] and 'L' or ' ')
+  table.insert(output, pressed['R'] and 'R' or ' ')
+  table.insert(output, ' ')
   table.insert(output, pressed['START'] and 'S' or ' ')
   table.insert(output, pressed['SELECT'] and 's' or ' ')
   return table.concat(output, '')
 end
 
 return {
+  at_duck_map = at_duck_map,
+  using_duck = using_duck,
   stored_eg_string = stored_eg_string,
   spinspeed_string = spinspeed_string,
   waterwalk_string = waterwalk_string,
