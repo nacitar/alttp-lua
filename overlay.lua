@@ -8,7 +8,7 @@ local var = require(THIS_DIR .. 'var')
 last_buttons = {}
 while true do
   util.draw_text(2, 120, {
-      'Mode:' .. var.mode:read() .. '/' .. var.submode:read(),
+      -- 'Mode:' .. var.mode:read() .. '/' .. var.submode:read(),
       'Stored EG: ' .. info.stored_eg_string(),
       'Waterwalk: ' .. info.waterwalk_string(),
       'Spinspeed: ' .. info.spinspeed_string(),
