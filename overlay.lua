@@ -6,6 +6,13 @@ local var = require(THIS_DIR .. 'var')
 
 local engine = emu or snes9x
 
+local HudLocation = {
+  TOP = 0,
+  BOTTOM = 1,
+}
+
+HUD_LOCATION = HudLocation.BOTTOM
+
 last_buttons = {}
 --print(gui)
 while true do
@@ -18,8 +25,15 @@ while true do
       'Tempbunny: ' .. info.tempbunny_string(),
       'Buttons: ' .. info.snes9x_button_string(last_buttons),
   })
-  -- 214 is the lowest it can draw
-  info.draw_input_hud(114, 213, last_buttons)
+  if HUD_LOCATION == HudLocation.TOP then
+    hud_x = 114
+    hud_y = 3  -- 1 is at edge, but looks better halfway to upper hud
+  else -- if HUD_LOCATION == HudLocation.BOTTOM then
+    hud_x = 114
+    -- 214 is the lowest it can draw
+    hud_y = 211
+  end
+  info.draw_input_hud(hud_x, hud_y, last_buttons)
   last_buttons = info.buffered_buttons()
   engine.frameadvance()
 end
