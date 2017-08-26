@@ -19,7 +19,7 @@ last_buttons = {}
 last_movement_frame_buttons = {}
 --print(gui)
 while true do
-  util.draw_text(2, 120, {
+  util.draw_text(2, 170, {
       --'Mode:' .. var.mode:read() .. '/' .. var.submode:read(),
       'Stored EG: ' .. info.stored_eg_string(),
       'Waterwalk: ' .. info.waterwalk_string(),
