@@ -8,9 +8,12 @@ return {
   mode = ram.Unsigned(0x7E0010, 1),
   ModeFlags = {
     TEXT_ITEM_MAP = 14,
+    OVERWORLD = 9,
+    UNDERWORLD = 7,
   },
   submode = ram.Unsigned(0x7E0011, 1),
   SubModeFlags = {
+    PLAYER_CONTROL = 0,
     DUCK_MAP = 10,
   },
   is_indoors = ram.Unsigned(0x7E001B, 1),

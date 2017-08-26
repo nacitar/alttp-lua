@@ -12,12 +12,15 @@ local HudLocation = {
 }
 
 HUD_LOCATION = HudLocation.BOTTOM
+-- this mimics practice hack, good for select buffering
+HUD_MOVEMENT_FRAME_ONLY = true
 
 last_buttons = {}
+last_movement_frame_buttons = {}
 --print(gui)
 while true do
   util.draw_text(2, 120, {
-      -- 'Mode:' .. var.mode:read() .. '/' .. var.submode:read(),
+      --'Mode:' .. var.mode:read() .. '/' .. var.submode:read(),
       'Stored EG: ' .. info.stored_eg_string(),
       'Waterwalk: ' .. info.waterwalk_string(),
       'Spinspeed: ' .. info.spinspeed_string(),
@@ -33,7 +36,18 @@ while true do
     -- 214 is the lowest it can draw
     hud_y = 211
   end
-  info.draw_input_hud(hud_x, hud_y, last_buttons)
+  if HUD_MOVEMENT_FRAME_ONLY then
+    buttons = last_movement_frame_buttons
+  else
+    buttons = last_buttons
+  end
+  info.draw_input_hud(hud_x, hud_y, buttons)
+
   last_buttons = info.buffered_buttons()
+  mode = var.mode:read()
+  if var.submode:read() == var.SubModeFlags.PLAYER_CONTROL and (
+      mode == var.ModeFlags.OVERWORLD or mode == var.ModeFlags.UNDERWORLD) then
+    last_movement_frame_buttons = last_buttons
+  end
   engine.frameadvance()
 end
