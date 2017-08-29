@@ -18,7 +18,7 @@ local HudLocation = {
 HUD_LOCATION = HudLocation.BOTTOM
 HUD_STYLE = HudStyle.SNES
 -- this mimics practice hack, good for select buffering
-HUD_MOVEMENT_FRAME_ONLY = true
+HUD_MOVEMENT_FRAME_ONLY = false
 
 last_buttons = {}
 last_movement_frame_buttons = {}
