@@ -1,258 +1,247 @@
 local THIS_DIR = (... or ''):match("(.-)[^%.]+$") or '.'
 local gfx = require(THIS_DIR .. 'gfx')
+local LIP = require(THIS_DIR .. 'util.LIP')
+local class = require(THIS_DIR .. 'util.class')
 
-SNES = {
-  BORDER = gfx.RGBA(0x00, 0x00, 0x00, 0xFF),
-  Y_PRESSED = gfx.RGBA(0x00, 0xFF, 0x00, 0xFF),
-  Y_RELEASED = gfx.RGBA(0x29, 0x5A, 0x29, 0xFF),
-  X_PRESSED = gfx.RGBA(0x8C, 0xD6, 0xFF, 0xFF),
-  X_RELEASED = gfx.RGBA(0x42, 0x42, 0x84, 0xFF),
-  A_PRESSED = gfx.RGBA(0xFF, 0x67, 0x7F, 0xFF),
-  A_RELEASED = gfx.RGBA(0x95, 0x29, 0x29, 0xFF),
-  B_PRESSED = gfx.RGBA(0xFF, 0xFF, 0xA0, 0xFF),
-  B_RELEASED = gfx.RGBA(0xF0, 0xA0, 0x24, 0xFF),
-  DPAD_RELEASED = gfx.RGBA(0x59, 0x5E, 0x62, 0xFF),
-  FACE = gfx.RGBA(0xB0, 0xB2, 0xB1, 0xFF),
-  BUTTON_RING = gfx.RGBA(0x67, 0x6C, 0x6F, 0xFF),
-}
-SNES.Y_BORDER = SNES.BORDER
-SNES.X_BORDER = SNES.BORDER
-SNES.A_BORDER = SNES.BORDER
-SNES.B_BORDER = SNES.BORDER
-SNES.DPAD_BORDER = SNES.BORDER
-SNES.DPAD_PRESSED = SNES.B_PRESSED
-SNES.SELECT_BORDER = SNES.BORDER
-SNES.SELECT_PRESSED = SNES.B_PRESSED
-SNES.SELECT_RELEASED = SNES.DPAD_RELEASED
-SNES.START_BORDER = SNES.BORDER
-SNES.START_PRESSED = SNES.B_PRESSED
-SNES.START_RELEASED = SNES.DPAD_RELEASED
-SNES.L_BORDER = SNES.BORDER
-SNES.L_PRESSED = SNES.B_PRESSED
-SNES.L_RELEASED = SNES.DPAD_RELEASED
-SNES.R_BORDER = SNES.BORDER
-SNES.R_PRESSED = SNES.B_PRESSED
-SNES.R_RELEASED = SNES.DPAD_RELEASED
-SNES.BUTTON_AREA = SNES.FACE
-SNES.DPAD_RING = SNES.BUTTON_RING
-SNES.DPAD_AREA = SNES.FACE
-
-
-function draw_button(drawer, x, y, border_color, color)
-  drawer:draw_rect(0+x, 1+y, 4, 2, border_color)
-  drawer:draw_rect(1+x, 0+y, 2, 4, border_color)
-  drawer:draw_rect(1+x, 1+y, 2, 2, color)
-end
-
-function draw_slanted_button(drawer, x, y, border_color, color)
-  drawer:draw_rect(0+x, 2+y, 2, 2, border_color)
-  drawer:draw_rect(1+x, 1+y, 2, 2, border_color)
-  drawer:draw_rect(2+x, 0+y, 2, 2, border_color)
-  drawer:draw_rect(1+x, 2+y, 1, 1, color)
-  drawer:draw_rect(2+x, 1+y, 1, 1, color)
-end
-
-function draw_dpad(drawer, x, y, pressed, theme)
-  drawer:draw_rect(0+x, 2+y, 8, 4, theme.DPAD_BORDER)
-  drawer:draw_rect(2+x, 0+y, 4, 8, theme.DPAD_BORDER)
-  drawer:draw_rect(1+x, 3+y, 2, 2,
-      pressed['LEFT'] and theme.DPAD_PRESSED or theme.DPAD_RELEASED)
-  drawer:draw_rect(3+x, 1+y, 2, 2,
-      pressed['UP'] and theme.DPAD_PRESSED or theme.DPAD_RELEASED)
-  drawer:draw_rect(5+x, 3+y, 2, 2,
-      pressed['RIGHT'] and theme.DPAD_PRESSED or theme.DPAD_RELEASED)
-  drawer:draw_rect(3+x, 5+y, 2, 2,
-      pressed['DOWN'] and theme.DPAD_PRESSED or theme.DPAD_RELEASED)
-end
-
-function draw_buttons(drawer, x, y, pressed, theme)
-  if theme.COMPACT_BUTTONS then
-    offset = 3
-  else
-    -- accurately spaced
-    offset = 4
+function parse_color_string(color_string)
+  if color_string:sub(1,1) == '#' then
+    len = color_string:len()
+    if len == 7 or len == 9 then
+      -- all the sub indexes seem stupid, because lua
+      red = tonumber(color_string:sub(2, 3), 16)
+      green = tonumber(color_string:sub(4, 5), 16)
+      blue = tonumber(color_string:sub(6, 7), 16)
+      if len > 7 then
+        alpha = tonumber(color_string:sub(8, 9), 16)
+      else
+        alpha = 0xFF
+      end
+      return gfx.RGBA(red, green, blue, alpha)
+    end
   end
-  drawer:draw_button(0+x, offset+y, theme.Y_BORDER,
-      pressed['Y'] and theme.Y_PRESSED or theme.Y_RELEASED)
-  drawer:draw_button(offset + x, y, theme.X_BORDER,
-      pressed['X'] and theme.X_PRESSED or theme.X_RELEASED)
-  drawer:draw_button(2*offset + x, offset + y, theme.A_BORDER,
-      pressed['A'] and theme.A_PRESSED or theme.A_RELEASED)
-  drawer:draw_button(offset + x, 2*offset + y, theme.B_BORDER,
-      pressed['B'] and theme.B_PRESSED or theme.B_RELEASED)
-end
-
-function draw_select_and_start(drawer, x, y, pressed, theme)
-  drawer:draw_slanted_button(x, y, theme.SELECT_BORDER,
-      pressed['SELECT'] and theme.SELECT_PRESSED or theme.SELECT_RELEASED)
-  drawer:draw_slanted_button(5+x, y, theme.START_BORDER,
-      pressed['START'] and theme.START_PRESSED or theme.START_RELEASED)
-end
-
-function draw_L_button(drawer, x, y, pressed, theme) 
-  drawer:draw_rect(x, y+3, 1, 1, theme.L_BORDER)  -- L top border left col
-  drawer:draw_rect(x+1, y+2, 1, 1, theme.L_BORDER)  -- next col
-  drawer:draw_rect(x+2, y+1, 2, 1, theme.L_BORDER)  -- next 2 cols
-  drawer:draw_rect(x+4, y, 7, 1, theme.L_BORDER)  -- next 7 cols
-  drawer:draw_rect(x+11, y+1, 1, 1, theme.L_BORDER)  -- last col
-  drawer:draw_rect(x+4, y+2, 7, 1, theme.L_BORDER)  -- L bottom border
-  drawer:draw_rect(x+2, y+3, 2, 1, theme.L_BORDER)  -- next 2 left
-  drawer:draw_rect(x+1, y+4, 1, 1, theme.L_BORDER)  -- next 2 left
-
-  color = pressed['L'] and theme.L_PRESSED or theme.L_RELEASED
-  drawer:draw_rect(x+1, y+3, 1, 1, color)
-  drawer:draw_rect(x+2, y+2, 2, 1, color)
-  drawer:draw_rect(x+4, y+1, 7, 1, color)
-end
-
-function draw_R_button(drawer, x, y, pressed, theme)
-  drawer:draw_rect(x, y+1, 1, 1, theme.R_BORDER)  -- R top border left col
-  drawer:draw_rect(x+1, y, 7, 1, theme.R_BORDER)  -- next 7 cols
-  drawer:draw_rect(x+8, y+1, 2, 1, theme.R_BORDER)  -- next 2 cols
-  drawer:draw_rect(x+10, y+2, 1, 1, theme.R_BORDER)  -- next col
-  drawer:draw_rect(x+11, y+3, 1, 1, theme.R_BORDER)  -- last col
-  drawer:draw_rect(x+1, y+2, 7, 1, theme.R_BORDER)  -- R bottom border
-  drawer:draw_rect(x+8, y+3, 2, 1, theme.R_BORDER)  --next 2 right
-  drawer:draw_rect(x+10, y+4, 1, 1, theme.R_BORDER)  --next 2 right
-
-  color = pressed['R'] and theme.R_PRESSED or theme.R_RELEASED
-  drawer:draw_rect(x+1, y+1, 7, 1, color)
-  drawer:draw_rect(x+8, y+2, 2, 1, color)
-  drawer:draw_rect(x+10, y+3, 1, 1, color)
-end
-
-function draw_snes_buttons(drawer, x, y, pressed, theme)
-  draw_dpad(drawer, x+2, y+8, pressed, theme)
-  draw_select_and_start(drawer, x+13, x+12, pressed, theme)
-  draw_buttons(drawer, x+25, y+6, pressed, theme)
-  draw_L_button(drawer, x, y, pressed, theme)
-  draw_R_button(drawer, x+25, y, pressed, theme)
-end
-
-function draw_snes_controller_shell(drawer, x, y, theme)
-  -- TAKE 2 away from Y
-  -- face (expects border to overlap it, to do this with fewer rectangles)
-  drawer:draw_rect(x+8, y+1, 29, 1, theme.FACE)  -- top row of face
-  drawer:draw_rect(x+5, y+2, 35, 15, theme.FACE)  -- main-section of face
-  drawer:draw_rect(x+6, y+17, 8, 2, theme.FACE)  -- left-lower face
-  drawer:draw_rect(x+31, y+17, 8, 2, theme.FACE)  -- right-lower face
-  drawer:draw_rect(x+3, y+3, 2, 14, theme.FACE) -- left of dpad face
-  drawer:draw_rect(x+40, y+3, 2, 14, theme.FACE) -- right of button face
-  drawer:draw_rect(x+1, y+5, 2, 10, theme.FACE) -- left edge face
-  drawer:draw_rect(x+42, y+5, 2, 10, theme.FACE) -- right edge face
-
-  -- border
-  drawer:draw_rect(x+8, y, 29, 1, theme.BORDER)  -- top border
-  drawer:draw_rect(x+6, y+1, 2, 1, theme.BORDER)  -- next 2 left
-  drawer:draw_rect(x+37, y+1, 2, 1, theme.BORDER)  --next 2 right
-  drawer:draw_rect(x+4, y+2, 2, 1, theme.BORDER)  -- next 2 left
-  drawer:draw_rect(x+39, y+2, 2, 1, theme.BORDER)  --next 2 right
-  drawer:draw_rect(x+3, y+3, 1, 1, theme.BORDER)  -- next 1 left
-  drawer:draw_rect(x+41, y+3, 1, 1, theme.BORDER)  --next 1 right
-  drawer:draw_rect(x+2, y+4, 1, 1, theme.BORDER)  -- next 1 left
-  drawer:draw_rect(x+42, y+4, 1, 1, theme.BORDER)  --next 1 right
-  drawer:draw_rect(x+1, y+5, 1, 2, theme.BORDER)  -- next 2 left
-  drawer:draw_rect(x+43, y+5, 1, 2, theme.BORDER)  --next 2 right
-  drawer:draw_rect(x+0, y+7, 1, 6, theme.BORDER)  -- next 6 left
-  drawer:draw_rect(x+44, y+7, 1, 6, theme.BORDER)  --next 6 right
-  drawer:draw_rect(x+1, y+13, 1, 2, theme.BORDER)  -- next 2 left
-  drawer:draw_rect(x+43, y+13, 1, 2, theme.BORDER)  --next 2 right
-  drawer:draw_rect(x+2, y+15, 1, 1, theme.BORDER)  -- next 1 left
-  drawer:draw_rect(x+42, y+15, 1, 1, theme.BORDER)  --next 1 right
-  drawer:draw_rect(x+3, y+16, 1, 1, theme.BORDER)  -- next 1 left
-  drawer:draw_rect(x+41, y+16, 1, 1, theme.BORDER)  --next 1 right
-  -- going down the curved lower ends
-  drawer:draw_rect(x+4, y+17, 2, 1, theme.BORDER)  -- next 2 left-left
-  drawer:draw_rect(x+14, y+17, 2, 1, theme.BORDER)  -- next 2 left-right
-  drawer:draw_rect(x+29, y+17, 2, 1, theme.BORDER)  -- next 2 right-left
-  drawer:draw_rect(x+39, y+17, 2, 1, theme.BORDER)  -- next 2 right-right
-  drawer:draw_rect(x+6, y+18, 2, 1, theme.BORDER)  -- next 2 left-left
-  drawer:draw_rect(x+12, y+18, 2, 1, theme.BORDER)  -- next 2 left-right
-  drawer:draw_rect(x+31, y+18, 2, 1, theme.BORDER)  -- next 2 right-left
-  drawer:draw_rect(x+37, y+18, 2, 1, theme.BORDER)  -- next 2 right-right
-  -- final edges
-  drawer:draw_rect(x+16, y+16, 13, 1, theme.BORDER)  -- mid-lower border
-  drawer:draw_rect(x+8, y+19, 4, 1, theme.BORDER)  -- left-lower border
-  drawer:draw_rect(x+33, y+19, 4, 1, theme.BORDER)  -- right-lower border
-end
-
-function draw_snes_button_ring(drawer, x, y, theme)
-  -- TOP-RIGHT
-  drawer:draw_rect(x+6, y, 4, 1, theme.BUTTON_RING)  -- N
-  drawer:draw_rect(x+9, y+1, 3, 1, theme.BUTTON_RING)  -- next row down
-  drawer:draw_rect(x+10, y+2, 3, 1, theme.BUTTON_RING)  -- next row down
-  drawer:draw_rect(x+11, y+3, 2, 2, theme.BUTTON_RING)  -- middle NE
-  drawer:draw_rect(x+13, y+3, 1, 3, theme.BUTTON_RING)  -- next col right
-  drawer:draw_rect(x+14, y+4, 1, 3, theme.BUTTON_RING)  -- next col right
-  -- RIGHT-BOTTOM
-  drawer:draw_rect(x+15, y+6, 1, 4, theme.BUTTON_RING)  -- E
-  drawer:draw_rect(x+14, y+9, 1, 3, theme.BUTTON_RING)  -- next col left
-  drawer:draw_rect(x+13, y+10, 1, 3, theme.BUTTON_RING)  -- next col left
-  drawer:draw_rect(x+12, y+11, 1, 3, theme.BUTTON_RING)  -- next col left
-  drawer:draw_rect(x+11, y+12, 1, 3, theme.BUTTON_RING)  -- next col left
-  drawer:draw_rect(x+10, y+13, 1, 2, theme.BUTTON_RING)  -- next col left
-  drawer:draw_rect(x+9, y+14, 1, 1, theme.BUTTON_RING)  -- next pixel left
-  -- BOTTOM-LEFT
-  drawer:draw_rect(x+6, y+15, 4, 1, theme.BUTTON_RING)  -- S
-  drawer:draw_rect(x+4, y+14, 3, 1, theme.BUTTON_RING)  -- next row up
-  drawer:draw_rect(x+3, y+13, 3, 1, theme.BUTTON_RING)  -- next row up
-  drawer:draw_rect(x+3, y+11, 2, 2, theme.BUTTON_RING)  -- middle SW
-  drawer:draw_rect(x+2, y+10, 1, 3, theme.BUTTON_RING)  -- next col left
-  drawer:draw_rect(x+1, y+9, 1, 3, theme.BUTTON_RING)  -- next col left
-  -- LEFT-TOP
-  drawer:draw_rect(x, y+6, 1, 4, theme.BUTTON_RING)  -- W
-  drawer:draw_rect(x+1, y+4, 1, 3, theme.BUTTON_RING)  -- next col right
-  drawer:draw_rect(x+2, y+3, 1, 3, theme.BUTTON_RING)  -- next col right
-  drawer:draw_rect(x+3, y+2, 1, 3, theme.BUTTON_RING)  -- next col right
-  drawer:draw_rect(x+4, y+1, 1, 3, theme.BUTTON_RING)  -- next col right
-  drawer:draw_rect(x+5, y+1, 1, 2, theme.BUTTON_RING)  -- next col right
-  drawer:draw_rect(x+6, y+1, 1, 1, theme.BUTTON_RING)  -- next pixel right
-  -- DIVIDER
-  drawer:draw_rect(x+5, y+10, 1, 1, theme.BUTTON_RING) -- bottom left
-  drawer:draw_rect(x+6, y+9, 1, 1, theme.BUTTON_RING)
-  drawer:draw_rect(x+7, y+8, 1, 1, theme.BUTTON_RING)
-  drawer:draw_rect(x+8, y+7, 1, 1, theme.BUTTON_RING)
-  drawer:draw_rect(x+9, y+6, 1, 1, theme.BUTTON_RING)
-  drawer:draw_rect(x+10, y+5, 1, 1, theme.BUTTON_RING) -- top right
-end
-
-function draw_snes_dpad_ring(drawer, x, y, theme)
-  drawer:draw_rect(x+4, 6, 4, 1, theme.DPAD_RING)  -- N
-  drawer:draw_rect(x+8, 7, 2, 1, theme.DPAD_RING)  -- N NE
-  drawer:draw_rect(x+10, 8, 1, 2, theme.DPAD_RING)  -- E NE
-  drawer:draw_rect(x+11, 10, 1, 4, theme.DPAD_RING)  -- E
-  drawer:draw_rect(x+10, 14, 1, 2, theme.DPAD_RING)  -- E SE
-  drawer:draw_rect(x+8, 16, 2, 1, theme.DPAD_RING)  -- S SE
-  drawer:draw_rect(x+4, 17, 4, 1, theme.DPAD_RING)  -- S
-  drawer:draw_rect(x+2, 16, 2, 1, theme.DPAD_RING)  -- S SW
-  drawer:draw_rect(x+1, 14, 1, 2, theme.DPAD_RING)  -- W SW
-  drawer:draw_rect(x, 10, 1, 4, theme.DPAD_RING)  -- W
-  drawer:draw_rect(x+1, 8, 1, 2, theme.DPAD_RING)  -- W NW
-  drawer:draw_rect(x+2, 7, 2, 1, theme.DPAD_RING)  -- N NW
-end
-
-function draw_snes_dpad_area(drawer, x, y, theme)
-  drawer:draw_rect(x+1, y+1, 8, 8, theme.DPAD_AREA)  -- main area
-  drawer:draw_rect(x, y+3, 1, 4, theme.DPAD_AREA)  -- left
-  drawer:draw_rect(x+3, y, 4, 1, theme.DPAD_AREA)  -- top
-  drawer:draw_rect(x+9, y+3, 1, 4, theme.DPAD_AREA)  -- right
-  drawer:draw_rect(x+3, y+9, 4, 1, theme.DPAD_AREA)  -- bottom
-end
-function draw_snes_button_area(drawer, x, y, theme)
   return nil
 end
+function lowercase_table_keys(tbl)
+  new_table = {}
+  for key, value in pairs(tbl) do
+    new_table[string.lower(key)] = value
+  end
+  return new_table
+end
+
+ProxyTable=class()
+function ProxyTable:__init(table_A, table_B)
+  self.table_A = table_A
+  self.table_B = table_B
+end
+function ProxyTable:get(key)
+  value = self.table_A[key]
+  if value == nil then
+    value = self.table_B[key]
+  end
+  return value
+end
+
+Overlay = class()
+function Overlay:__init()
+  self:clear()
+end
+function Overlay:clear()
+  self.drawer = nil
+  self.button_default = {}
+  self.preferences = {}
+  self.palette = {}
+  self.buttons = {}
+  self.pressed = {}
+end
+
+function Overlay:set_pressed(pressed)
+  self.pressed = lowercase_table_keys(pressed)
+end
+function Overlay:load_config(config_filepath)
+  -- Load the config
+  ini_data = LIP.load(config_filepath)
+  self:clear()
+  for section, data in pairs(ini_data) do
+    section = string.lower(section)
+    if section == 'palette' then
+      for color_name, color_string in pairs(data) do
+        color = parse_color_string(color_string)
+        if color ~= nil then
+          self.palette[color_name] = color
+        else
+          error('Color not in correct format: ' .. color_name .. '=' .. color_string)
+        end
+      end
+    elseif section == 'preferences' then
+      self.preferences = lowercase_table_keys(data)
+    elseif section == 'default' then
+      self.button_default = lowercase_table_keys(data)
+    else
+      -- this is a button
+      config = lowercase_table_keys(data)
+      if not config.button then
+        config.button = section  -- default to the section name
+      end
+      self.buttons[section] = config
+    end
+  end
+  self.drawer = gfx.ScaledDrawer(
+      self.preferences.x, self.preferences.y, self.preferences.scale)
+end
+function Overlay:get_color(color_string)
+  local color = parse_color_string(color_string)
+  if color == nil then
+    color = self.palette[color_string]
+  end
+  return color
+end
+function Overlay:draw_button(name)
+  local name = string.lower(name)
+  local config = ProxyTable(self.buttons[name], self.button_default)
+  local x = config:get('x')
+  local y = config:get('y')
+  local width = config:get('width')
+  local height = config:get('height')
+  local button_name = config:get('button')
+  if self.pressed[button_name] then
+    color = self:get_color(config:get('pressed'))
+  else
+    color = self:get_color(config:get('released'))
+  end
+  local border = self:get_color(config:get('border'))
+  local border_width = config:get('border_width')
+  local border_nw = config:get('border_nw') and border_width or 0
+  local border_ne = config:get('border_ne') and border_width or 0
+  local border_se = config:get('border_se') and border_width or 0
+  local border_sw = config:get('border_sw') and border_width or 0
+
+  -- left
+  self.drawer:draw_rect(x - border_width, y, border_width, height, border)
+  -- right
+  self.drawer:draw_rect(x + width, y, border_width, height, border)
+  -- top/corners
+  self.drawer:draw_rect(x - border_nw, y - border_width,
+      width + border_nw + border_ne, border_width, border)
+  -- bottom/corners
+  self.drawer:draw_rect(x - border_sw, y + height,
+      width + border_sw + border_se, border_width, border)
+  -- button
+  self.drawer:draw_rect(x, y, width, height, color)
+end
+function Overlay:draw()
+  for name, config in pairs(self.buttons) do
+    self:draw_button(name)
+  end
+end
+
+-- TODO: rip out shell stuff, put in an image somehow?  snes9x support?  gd?
+function Overlay:draw_snes_controller_shell(x, y)
+  border_color = gfx.RGBA(0x00, 0x00, 0x00, 0xFF)
+  face_color = gfx.RGBA(0xB0, 0xB2, 0xB1, 0xFF)
+  dark_face_color = gfx.RGBA(0x67, 0x6C, 0x6F, 0xFF)
+
+  -- face (expects border to overlap it, to do this with fewer rectangles)
+  self.drawer:draw_rect(x+8, y+1, 29, 1, face_color)  -- top row of face
+  self.drawer:draw_rect(x+5, y+2, 35, 15, face_color)  -- main-section of face
+  self.drawer:draw_rect(x+6, y+17, 8, 2, face_color)  -- left-lower face
+  self.drawer:draw_rect(x+31, y+17, 8, 2, face_color)  -- right-lower face
+  self.drawer:draw_rect(x+3, y+3, 2, 14, face_color) -- left of dpad face
+  self.drawer:draw_rect(x+40, y+3, 2, 14, face_color) -- right of button face
+  self.drawer:draw_rect(x+1, y+5, 2, 10, face_color) -- left edge face
+  self.drawer:draw_rect(x+42, y+5, 2, 10, face_color) -- right edge face
+
+  -- border
+  self.drawer:draw_rect(x+8, y, 29, 1, border_color)  -- top border
+  self.drawer:draw_rect(x+6, y+1, 2, 1, border_color)  -- next 2 left
+  self.drawer:draw_rect(x+37, y+1, 2, 1, border_color)  --next 2 right
+  self.drawer:draw_rect(x+4, y+2, 2, 1, border_color)  -- next 2 left
+  self.drawer:draw_rect(x+39, y+2, 2, 1, border_color)  --next 2 right
+  self.drawer:draw_rect(x+3, y+3, 1, 1, border_color)  -- next 1 left
+  self.drawer:draw_rect(x+41, y+3, 1, 1, border_color)  --next 1 right
+  self.drawer:draw_rect(x+2, y+4, 1, 1, border_color)  -- next 1 left
+  self.drawer:draw_rect(x+42, y+4, 1, 1, border_color)  --next 1 right
+  self.drawer:draw_rect(x+1, y+5, 1, 2, border_color)  -- next 2 left
+  self.drawer:draw_rect(x+43, y+5, 1, 2, border_color)  --next 2 right
+  self.drawer:draw_rect(x+0, y+7, 1, 6, border_color)  -- next 6 left
+  self.drawer:draw_rect(x+44, y+7, 1, 6, border_color)  --next 6 right
+  self.drawer:draw_rect(x+1, y+13, 1, 2, border_color)  -- next 2 left
+  self.drawer:draw_rect(x+43, y+13, 1, 2, border_color)  --next 2 right
+  self.drawer:draw_rect(x+2, y+15, 1, 1, border_color)  -- next 1 left
+  self.drawer:draw_rect(x+42, y+15, 1, 1, border_color)  --next 1 right
+  self.drawer:draw_rect(x+3, y+16, 1, 1, border_color)  -- next 1 left
+  self.drawer:draw_rect(x+41, y+16, 1, 1, border_color)  --next 1 right
+  -- going down the curved lower ends
+  self.drawer:draw_rect(x+4, y+17, 2, 1, border_color)  -- next 2 left-left
+  self.drawer:draw_rect(x+14, y+17, 2, 1, border_color)  -- next 2 left-right
+  self.drawer:draw_rect(x+29, y+17, 2, 1, border_color)  -- next 2 right-left
+  self.drawer:draw_rect(x+39, y+17, 2, 1, border_color)  -- next 2 right-right
+  self.drawer:draw_rect(x+6, y+18, 2, 1, border_color)  -- next 2 left-left
+  self.drawer:draw_rect(x+12, y+18, 2, 1, border_color)  -- next 2 left-right
+  self.drawer:draw_rect(x+31, y+18, 2, 1, border_color)  -- next 2 right-left
+  self.drawer:draw_rect(x+37, y+18, 2, 1, border_color)  -- next 2 right-right
+  -- final edges
+  self.drawer:draw_rect(x+16, y+16, 13, 1, border_color)  -- mid-lower border
+  self.drawer:draw_rect(x+8, y+19, 4, 1, border_color)  -- left-lower border
+  self.drawer:draw_rect(x+33, y+19, 4, 1, border_color)  -- right-lower border
+end
+
+function Overlay:draw_snes_button_ring(x, y)
+  -- TOP-RIGHT
+  self.drawer:draw_rect(x+6, y, 4, 1, dark_face_color)  -- N
+  self.drawer:draw_rect(x+9, y+1, 3, 1, dark_face_color)  -- next row down
+  self.drawer:draw_rect(x+10, y+2, 3, 1, dark_face_color)  -- next row down
+  self.drawer:draw_rect(x+11, y+3, 2, 2, dark_face_color)  -- middle NE
+  self.drawer:draw_rect(x+13, y+3, 1, 3, dark_face_color)  -- next col right
+  self.drawer:draw_rect(x+14, y+4, 1, 3, dark_face_color)  -- next col right
+  -- RIGHT-BOTTOM
+  self.drawer:draw_rect(x+15, y+6, 1, 4, dark_face_color)  -- E
+  self.drawer:draw_rect(x+14, y+9, 1, 3, dark_face_color)  -- next col left
+  self.drawer:draw_rect(x+13, y+10, 1, 3, dark_face_color)  -- next col left
+  self.drawer:draw_rect(x+12, y+11, 1, 3, dark_face_color)  -- next col left
+  self.drawer:draw_rect(x+11, y+12, 1, 3, dark_face_color)  -- next col left
+  self.drawer:draw_rect(x+10, y+13, 1, 2, dark_face_color)  -- next col left
+  self.drawer:draw_rect(x+9, y+14, 1, 1, dark_face_color)  -- next pixel left
+  -- BOTTOM-LEFT
+  self.drawer:draw_rect(x+6, y+15, 4, 1, dark_face_color)  -- S
+  self.drawer:draw_rect(x+4, y+14, 3, 1, dark_face_color)  -- next row up
+  self.drawer:draw_rect(x+3, y+13, 3, 1, dark_face_color)  -- next row up
+  self.drawer:draw_rect(x+3, y+11, 2, 2, dark_face_color)  -- middle SW
+  self.drawer:draw_rect(x+2, y+10, 1, 3, dark_face_color)  -- next col left
+  self.drawer:draw_rect(x+1, y+9, 1, 3, dark_face_color)  -- next col left
+  -- LEFT-TOP
+  self.drawer:draw_rect(x, y+6, 1, 4, dark_face_color)  -- W
+  self.drawer:draw_rect(x+1, y+4, 1, 3, dark_face_color)  -- next col right
+  self.drawer:draw_rect(x+2, y+3, 1, 3, dark_face_color)  -- next col right
+  self.drawer:draw_rect(x+3, y+2, 1, 3, dark_face_color)  -- next col right
+  self.drawer:draw_rect(x+4, y+1, 1, 3, dark_face_color)  -- next col right
+  self.drawer:draw_rect(x+5, y+1, 1, 2, dark_face_color)  -- next col right
+  self.drawer:draw_rect(x+6, y+1, 1, 1, dark_face_color)  -- next pixel right
+  -- DIVIDER
+  self.drawer:draw_rect(x+5, y+10, 1, 1, dark_face_color) -- bottom left
+  self.drawer:draw_rect(x+6, y+9, 1, 1, dark_face_color)
+  self.drawer:draw_rect(x+7, y+8, 1, 1, dark_face_color)
+  self.drawer:draw_rect(x+8, y+7, 1, 1, dark_face_color)
+  self.drawer:draw_rect(x+9, y+6, 1, 1, dark_face_color)
+  self.drawer:draw_rect(x+10, y+5, 1, 1, dark_face_color) -- top right
+end
+
+function Overlay:draw_snes_dpad_ring(x, y)
+  self.drawer:draw_rect(x+4, 6, 4, 1, dark_face_color)  -- N
+  self.drawer:draw_rect(x+8, 7, 2, 1, dark_face_color)  -- N NE
+  self.drawer:draw_rect(x+10, 8, 1, 2, dark_face_color)  -- E NE
+  self.drawer:draw_rect(x+11, 10, 1, 4, dark_face_color)  -- E
+  self.drawer:draw_rect(x+10, 14, 1, 2, dark_face_color)  -- E SE
+  self.drawer:draw_rect(x+8, 16, 2, 1, dark_face_color)  -- S SE
+  self.drawer:draw_rect(x+4, 17, 4, 1, dark_face_color)  -- S
+  self.drawer:draw_rect(x+2, 16, 2, 1, dark_face_color)  -- S SW
+  self.drawer:draw_rect(x+1, 14, 1, 2, dark_face_color)  -- W SW
+  self.drawer:draw_rect(x, 10, 1, 4, dark_face_color)  -- W
+  self.drawer:draw_rect(x+1, 8, 1, 2, dark_face_color)  -- W NW
+  self.drawer:draw_rect(x+2, 7, 2, 1, dark_face_color)  -- N NW
+end
+
 return {
-  SNES = SNES,
-  draw_button = draw_button,
-  draw_slanted_button = draw_slanted_button,
-  draw_dpad = draw_dpad,
-  draw_buttons = draw_buttons,
-  draw_select_and_start = draw_select_and_start,
-  draw_L_button = draw_L_button,
-  draw_R_button = draw_R_button,
   draw_snes_controller_shell = draw_snes_controller_shell,
-  draw_snes_button_ring = draw_snes_button_ring,
-  draw_snes_dpad_ring = draw_snes_dpad_ring,
-  draw_snes_dpad_area = draw_snes_dpad_area,
-  draw_snes_button_area = draw_snes_button_area,
+  Overlay = Overlay,
 }

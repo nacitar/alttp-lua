@@ -144,6 +144,7 @@ function buffered_buttons()
   return pressed
 end
 
+-- TODO: recreate with ini file
 function draw_input_hud(x, y, pressed)
   local COLOR_BORDER = gfx.RGBA(0x00, 0x00, 0x00, 0xFF)
   local COLOR_PRESSED = gfx.RGBA(0xE1, 0xE1, 0xE1, 0xFF)
@@ -180,34 +181,6 @@ function draw_input_hud(x, y, pressed)
   bottom_color = pressed['B'] and COLOR_B or COLOR_RELEASED
   drawer:draw_simple_buttons(19, 0, COLOR_BORDER,
       left_color, top_color, right_color, bottom_color)
-end
-function draw_snes_controller(x, y, pressed)
-  theme = padlight.SNES
-  drawer = gfx.ScaledDrawer(x, y, 1)
-  padlight.draw_snes_controller_shell(drawer, 0, 2, theme)
-  padlight.draw_L_button(drawer, 4, 0, pressed, theme)
-  padlight.draw_R_button(drawer, 29, 0, pressed, theme)
-  padlight.draw_snes_dpad_ring(drawer, 4, 6, theme)
-  padlight.draw_snes_dpad_area(drawer, 5, 7, theme)  -- shell does this
-  padlight.draw_snes_button_ring(drawer, 27, 4, theme)
-  padlight.draw_snes_button_area(drawer, 28, 5, theme)  -- does nothing
-  padlight.draw_dpad(drawer, 6, 8, pressed, theme)
-  padlight.draw_buttons(drawer, 29, 6, pressed, theme)
-  padlight.draw_select_and_start(drawer, 17, 12, pressed, theme)
-end
-function draw_snes_controller_buttons(x, y, pressed)
-  theme = padlight.SNES
-  drawer = gfx.ScaledDrawer(x, y, 1)
-  --padlight.draw_snes_controller_shell(drawer, 0, 2, theme)
-  padlight.draw_L_button(drawer, 4, 0, pressed, theme)
-  padlight.draw_R_button(drawer, 29, 0, pressed, theme)
-  --padlight.draw_snes_dpad_ring(drawer, 4, 6, theme)
-  --padlight.draw_snes_dpad_area(drawer, 5, 7, theme)  -- shell does this
-  --padlight.draw_snes_button_ring(drawer, 27, 4, theme)
-  --padlight.draw_snes_button_area(drawer, 28, 5, theme)  -- does nothing
-  padlight.draw_dpad(drawer, 6, 8, pressed, theme)
-  padlight.draw_buttons(drawer, 29, 6, pressed, theme)
-  padlight.draw_select_and_start(drawer, 17, 12, pressed, theme)
 end
 
 function snes9x_button_string(pressed)
