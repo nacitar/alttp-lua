@@ -37,7 +37,36 @@ function using_duck()
   return held_by_duck()
 end
 
-function stored_eg_string()
+local StoredEG = {
+  DISARMED = 0,
+  STRONG = 1,
+  WEAK = 2,
+}
+
+local WaterWalk = {
+  DISARMED = 0,
+  ARMED = 1,
+}
+
+local SpinSpeed = {
+  DISARMED = 0,
+  ARMED = 1,
+}
+
+local Bunny = {
+  LINK = 0,
+  BUNNY = 1,
+  TEMPBUNNY = 2,
+  SUPERBUNNY = 3,
+  LOUSYLINK = 4,
+}
+
+local TempBunny = {
+  DISARMED = 0,
+  ARMED = 1,
+}
+
+function stored_eg_state()
   -- if you queue a layer change, the value is incremented rather than simply
   -- set to 1.  Therefore, if you queue it multiple times, the value will
   -- increase... and any nonzero value is treated at a single change.
@@ -58,26 +87,27 @@ function stored_eg_string()
           var.aux_link_state:read() ~= var.AuxLinkStateFlags.JUMPING or
           var.is_indoors:read() == 0) then
     if var.room_upper_layer:read() == 1 then
-      return 'strong'
+      return StoredEG.STRONG
     else
-      return 'weak'
+      return StoredEG.WEAK
     end
   end
-  return 'disarmed'
+  return StoredEG.DISARMED
 end
 
-function waterwalk_string()
+function waterwalk_state()
   if var.falling_state:read() ~= var.FallingStateFlags.NORMAL and
       var.player_state:read() ~= var.PlayerStateFlags.FALLING_OR_NEAR_HOLE then
-    return 'armed'
+    return WaterWalk.ARMED
   end
-  return 'disarmed'
+  return WaterWalk.DISARMED
 end
 
 local SPINSPEED_BAD_STATES = util.Set({
   var.PlayerStateFlags.DASHING,
   var.PlayerStateFlags.FALLING_OR_NEAR_HOLE})
-function spinspeed_string()
+
+function spinspeed_state()
   -- spinspeed sets dash_countdown to 29 as well, but not checking it
   if not SPINSPEED_BAD_STATES[var.player_state:read()] and
       var.bonk_wall:read() == 1 and not using_duck() then
@@ -88,43 +118,44 @@ function spinspeed_string()
       -- than checking for a side effect.
       -- Without this extra check, dashing and then getting picked up by the
       -- duck mid-dash will erroneously report spinspeed.
-    return 'armed'
+    return SpinSpeed.ARMED
   end
-  return 'disarmed'
+  return SpinSpeed.DISARMED
 end
 
 local SUPERBUNNY_STATES = util.Set({
   var.PlayerStateFlags.GROUND,
   var.PlayerStateFlags.DASHING,
   var.PlayerStateFlags.SPIN_ATTACKING})
-function bunny_string()
+
+function bunny_state()
   player_state = var.player_state:read()
   if var.bunny_mode:read() == 1 then
     if SUPERBUNNY_STATES[player_state] then
-      return 'superbunny'
+      return Bunny.SUPERBUNNY
     elseif player_state == var.PlayerStateFlags.TEMPBUNNY then
-      return 'tempbunny'
+      return Bunny.TEMPBUNNY
     end
-    return 'bunny'
+    return Bunny.BUNNY
   else
     if player_state == var.PlayerStateFlags.PERMABUNNY then
-      return 'lousylink'
+      return Bunny.LOUSYLINK
     end
     -- if you set tempbunny w/ cheats, you end up in an infinite
     -- transformation.. so I don't think I need to check for this here.
   end
   -- when hit by a bunny beam you are considered link during the
   -- transformation
-  return 'link'
+  return Bunny.LINK
 end
 
-function tempbunny_string()
+function tempbunny_state()
   if var.bunny_mode:read() == 1 and
       var.tempbunny_timer:read() ~= 0 and
       var.player_state:read() ~= var.PlayerStateFlags.TEMPBUNNY then
-    return 'armed'
+    return TempBunny.ARMED
   end
-  return 'disarmed'
+  return TempBunny.DISARMED
 end
 
 function buffered_buttons()
@@ -206,17 +237,53 @@ function snes9x_button_string(pressed)
   return table.concat(output, '')
 end
 
+function glitched_states()
+  local output = {}
+  local state
+
+  if tempbunny_state == TempBunny.ARMED then
+    table.insert(output, "Stored Tempbunny")
+  end
+
+  state = bunny_state()
+  if state == Bunny.SUPERBUNNY then
+    table.insert(output, "Super Bunny")
+  elseif state == Bunny.LOUSYLINK then
+    table.insert(output, "Lousy Link")
+  end
+
+  if waterwalk_state() == WaterWalk.ARMED then
+    table.insert(output, 'Water Walk')
+  end
+
+  if spinspeed_state() == SpinSpeed.ARMED then
+    table.insert(output, 'Spin Speed')
+  end
+
+  state = stored_eg_state() 
+  if state == StoredEG.STRONG then
+    table.insert(output, 'Strong EG')
+  elseif state == StoredEG.WEAK then
+    table.insert(output, 'Weak EG')
+  end
+  return output
+end
+  
+  
+
+
 return {
   at_duck_map = at_duck_map,
   using_duck = using_duck,
-  stored_eg_string = stored_eg_string,
-  spinspeed_string = spinspeed_string,
-  waterwalk_string = waterwalk_string,
-  bunny_string = bunny_string,
-  tempbunny_string = tempbunny_string,
+  stored_eg_state = stored_eg_state,
+  spinspeed_state = spinspeed_state,
+  waterwalk_state = waterwalk_state,
+  bunny_state = bunny_state,
+  tempbunny_state = tempbunny_state,
   snes9x_button_string = snes9x_button_string,
   buffered_buttons = buffered_buttons,
   draw_input_hud = draw_input_hud,
   draw_snes_controller = draw_snes_controller,
   draw_snes_controller_buttons = draw_snes_controller_buttons,
+  glitched_states = glitched_states,
 }

@@ -17,6 +17,8 @@ return {
     DUCK_MAP = 10,
   },
   is_indoors = ram.Unsigned(0x7E001B, 1),
+  player_y = ram.Unsigned(0x7E0020, 2),
+  player_x = ram.Unsigned(0x7E0022, 2),
   falling_state = ram.Unsigned(0x7E005B, 1),
   FallingStateFlags = {
     NORMAL = 0,

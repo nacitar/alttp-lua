@@ -16,15 +16,10 @@ last_movement_frame_buttons = {}
 pad_overlay = padlight.Overlay()
 pad_overlay:load_config(THIS_DIR .. '/config.ini')
 while true do
-  util.draw_text(2, 170, {
-      --'Mode:' .. var.mode:read() .. '/' .. var.submode:read(),
-      'Stored EG: ' .. info.stored_eg_string(),
-      'Waterwalk: ' .. info.waterwalk_string(),
-      'Spinspeed: ' .. info.spinspeed_string(),
-      'Bunny mode: ' .. info.bunny_string(),
-      'Tempbunny: ' .. info.tempbunny_string(),
-      'Buttons: ' .. info.snes9x_button_string(last_buttons),
-  })
+  output = info.glitched_states()
+  table.insert(output, string.format('%05d,%05d',
+      var.player_x:read(), var.player_y:read()))
+  util.draw_text_above(10, 211, output)
   if HUD_MOVEMENT_FRAME_ONLY then
     buttons = last_movement_frame_buttons
   else
