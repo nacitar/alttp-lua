@@ -1,5 +1,6 @@
 local THIS_DIR = (... or ''):match("(.-)[^%.]+$") or '.'
 local gfx = require(THIS_DIR .. 'gfx')
+local util = require(THIS_DIR .. 'util.util')
 local LIP = require(THIS_DIR .. 'util.LIP')
 local class = require(THIS_DIR .. 'util.class')
 
@@ -16,7 +17,7 @@ function parse_color_string(color_string)
       else
         alpha = 0xFF
       end
-      return gfx.RGBA(red, green, blue, alpha)
+      return util.RGBA(red, green, blue, alpha)
     end
   end
   return nil
@@ -137,9 +138,9 @@ end
 
 -- TODO: rip out shell stuff, put in an image somehow?  snes9x support?  gd?
 function Overlay:draw_snes_controller_shell(x, y)
-  border_color = gfx.RGBA(0x00, 0x00, 0x00, 0xFF)
-  face_color = gfx.RGBA(0xB0, 0xB2, 0xB1, 0xFF)
-  dark_face_color = gfx.RGBA(0x67, 0x6C, 0x6F, 0xFF)
+  border_color = util.RGBA(0x00, 0x00, 0x00, 0xFF)
+  face_color = util.RGBA(0xB0, 0xB2, 0xB1, 0xFF)
+  dark_face_color = util.RGBA(0x67, 0x6C, 0x6F, 0xFF)
 
   -- face (expects border to overlap it, to do this with fewer rectangles)
   self.drawer:draw_rect(x+8, y+1, 29, 1, face_color)  -- top row of face

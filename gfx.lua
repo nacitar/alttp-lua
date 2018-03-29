@@ -1,27 +1,7 @@
 local THIS_DIR = (... or ''):match("(.-)[^%.]+$") or '.'
+
 local class = require(THIS_DIR .. 'util.class')
-
-function is_bizhawk()
-  return (gui.drawBox and true or false)
-end
-
-function RGBA(red, green, blue, alpha)
-  if is_bizhawk() then
-    -- bizhawk wants the alpha at the other end..
-    return (
-        bit.band(blue, 0xFF) +
-        bit.lshift(bit.band(green, 0xFF), 8) +
-        bit.lshift(bit.band(red, 0xFF), 16) +
-        bit.lshift(bit.band(alpha, 0xFF), 24))
-  else
-    -- snes9x
-    return (
-        bit.band(alpha, 0xFF) +
-        bit.lshift(bit.band(blue, 0xFF), 8) +
-        bit.lshift(bit.band(green, 0xFF), 16) +
-        bit.lshift(bit.band(red, 0xFF), 24))
-  end
-end
+local util = require(THIS_DIR .. 'util.util')
 
 ScaledDrawer = class()
 function ScaledDrawer:__init(x, y, scale)
@@ -39,17 +19,14 @@ function ScaledDrawer:draw_rect(x, y, width, height, color)
   x = self.x + x * self.scale
   y = self.y + y * self.scale
   if width == 1 and height == 1 then
-    pixelFunc = is_bizhawk() and gui.drawPixel or gui.pixel
-    pixelFunc(x, y, color)
+    util.drawPixel(x, y, color)
   else
     x2 = x + width - 1
     y2 = y + height - 1
     if width == 1 or height == 1 then
-      lineFunc = is_bizhawk() and gui.drawLine or gui.line
-      lineFunc(x, y, x2, y2, color)
+      util.drawLine(x, y, x2, y2, color)
     else
-      rectFunc = is_bizhawk() and gui.drawBox or gui.rect
-      rectFunc(x, y, x2, y2, color, color)
+      util.drawBox(x, y, x2, y2, color, color)
     end
   end
 end
@@ -89,8 +66,6 @@ function ScaledDrawer:draw_shoulder_button(x, y, border_color, color)
 end
 
 return {
-  is_bizhawk = is_bizhawk,
-  RGBA = RGBA,
   ScaledDrawer = ScaledDrawer,
 }
 
